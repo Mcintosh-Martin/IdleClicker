@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine;
 
+
 public class Incrimentor : MonoBehaviour
 {
     public Text text;
@@ -14,20 +15,26 @@ public class Incrimentor : MonoBehaviour
     public double val;
     public double add;
     public string eNum;
-
+    StringGenerator stringGenerator;
     public string finalString;
     int expo = 0;
+
+    bool auto = false;
     // Start is called before the first frame update
     void Start()
     {
         val = 0;
         add = 1;
+
+        stringGenerator = new StringGenerator();
     }
 
     // Update is called once per frame
     void Update()
     {
-        val += add;
+
+        if(auto)
+            val += add;
         eNum = val.ToString("0.00000E0");
 
         //RAW
@@ -35,38 +42,80 @@ public class Incrimentor : MonoBehaviour
         //SCIENTIFIC NOTATION
         text2.text = val.ToString("0.00000E0");
 
-        grabExponential(val);
-        FindSuffix(expo);
+        
+        finalString = FindExponetialPosition(grabExponential(val));
+        finalString = RemoveExponetial(finalString);
+        finalString = finalString + FindSuffix(grabExponential(val));
+        text4.text = stringGenerator.GeneratePrintableString(val);
 
-        text4.text = finalString;
+        text5.text = GeneratePrintableString(val);
     }
-    void grabExponential(double rawVal)
+
+    string GeneratePrintableString(double rawVal)
+    {
+        if (rawVal <= 1000000)
+        {
+            return rawVal.ToString("N");
+        }
+        else
+        {
+            int exponentialSize = 0;
+            int.TryParse(rawVal.ToString("0.00000E0").Substring(8), out exponentialSize);
+
+            string scientificNotation = "";
+            if ((exponentialSize % 3) + 1 == 1)
+            {
+                scientificNotation = val.ToString("0.000e0");
+            }
+            else if ((exponentialSize % 3) + 1 == 2)
+            {
+                scientificNotation = val.ToString("00.000e0");
+            }
+            else if ((exponentialSize % 3) + 1 == 3)
+            {
+                scientificNotation = val.ToString("000.000e0");
+            }
+
+            string returnable = scientificNotation.Remove(scientificNotation.IndexOf('e'));
+
+            returnable = returnable + FindSuffix(exponentialSize);
+
+           return returnable;
+        } 
+    }
+
+    int grabExponential(double rawVal)
     {
         //EXPONENTIAL
-        //string subStrinA = eNum.Substring(8);
-        int.TryParse(eNum.Substring(8), out expo);
+        int returnable = 0;
+        int.TryParse(eNum.Substring(8), out returnable);
         text3.text = expo.ToString();
 
-        if ((expo % 3) + 1 == 1)
+        return returnable;
+    }
+    string FindExponetialPosition(int exponential)
+    {
+        string scientificNotation = "";
+        if ((exponential % 3) + 1 == 1)
         {
-            finalString = val.ToString("0.000e0");
+            scientificNotation = val.ToString("0.000e0");
         }
-        else if((expo % 3) + 1 == 2)
+        else if ((exponential % 3) + 1 == 2)
         {
-            finalString = val.ToString("00.000e0");
+            scientificNotation = val.ToString("00.000e0");
         }
-        else if((expo % 3) + 1 == 3)
+        else if ((exponential % 3) + 1 == 3)
         {
-            finalString = val.ToString("000.000e0");
+            scientificNotation = val.ToString("000.000e0");
         }
-        finalString.Remove(finalString.IndexOf('e'));
-
-        string testR = finalString.Remove(finalString.IndexOf('e'));
-        finalString = testR;
+        return scientificNotation;
     }
 
-
-
+    string RemoveExponetial(string val)
+    {
+        string returnable = val.Remove(val.IndexOf('e'));
+        return returnable;
+    }
     string FindSuffix(int val)
     {
         double suff = Mathf.Floor(val / 3);
@@ -76,7 +125,7 @@ public class Incrimentor : MonoBehaviour
         switch (suff)
         {
             case 0:
-                suffix = "T";             
+                suffix = "T";
                 break;
             case 1:
                 suffix = "K";
@@ -143,7 +192,19 @@ public class Incrimentor : MonoBehaviour
                 suffix = "Default Case";
                 break;
         }
-
         return suffix;
+    }
+
+    public void addBut()
+    {
+        val += 10;
+    }
+    public void subBut()
+    {
+        val -= 10;
+    }
+    public void autoBut()
+    {
+        auto = !auto;
     }
 }
